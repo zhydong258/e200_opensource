@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <stdexcept> // add by zyuan
 #include <pthread.h>
 
 #define RV_X(x, s, n) \
@@ -89,10 +90,10 @@ int dtm_t::enumerate_harts() {
   while(1) {
     select_hart(hartsel);
     dmstatus = read(DMI_DMSTATUS);
-    if (get_field(dmstatus, DMI_DMSTATUS_ANYNONEXISTENT)) { 
+    if (get_field(dmstatus, DMI_DMSTATUS_ANYNONEXISTENT)) {
       break;
     }
-    hartsel++; 
+    hartsel++;
   }
   return hartsel;
 }
@@ -154,7 +155,7 @@ void dtm_t::restore_reg(unsigned regno, uint64_t val)
     AC_ACCESS_REGISTER_WRITE |
     AC_AR_SIZE(xlen) |
     AC_AR_REGNO(regno);
-  
+
   RUN_AC_OR_DIE(command, 0, 0, data, xlen / (8*4));
 
 }
@@ -162,10 +163,10 @@ void dtm_t::restore_reg(unsigned regno, uint64_t val)
 uint32_t dtm_t::run_abstract_command(uint32_t command,
                                      const uint32_t program[], size_t program_n,
                                      uint32_t data[], size_t data_n)
-{ 
+{
   assert(program_n <= ram_words);
   assert(data_n    <= data_words);
-  
+
   for (size_t i = 0; i < program_n; i++) {
     write(DMI_PROGBUF0 + i, program[i]);
   }
@@ -176,9 +177,9 @@ uint32_t dtm_t::run_abstract_command(uint32_t command,
       write(DMI_DATA0 + i, data[i]);
     }
   }
-  
+
   write(DMI_COMMAND, command);
-  
+
   // Wait for not busy and then check for error.
   uint32_t abstractcs;
   do {
@@ -191,7 +192,7 @@ uint32_t dtm_t::run_abstract_command(uint32_t command,
       data[i] = read(DMI_DATA0 + i);
     }
   }
-  
+
   return get_field(abstractcs, DMI_ABSTRACTCS_CMDERR);
 
 }
@@ -212,7 +213,7 @@ void dtm_t::read_chunk(uint64_t taddr, size_t len, void* dst)
 
   uint64_t s0 = save_reg(S0);
   uint64_t s1 = save_reg(S1);
-  
+
   prog[0] = LOAD(xlen, S1, S0, 0);
   prog[1] = ADDI(S0, S0, xlen/8);
   prog[2] = EBREAK;
@@ -227,7 +228,7 @@ void dtm_t::read_chunk(uint64_t taddr, size_t len, void* dst)
   uint32_t command = AC_ACCESS_REGISTER_TRANSFER |
     AC_ACCESS_REGISTER_WRITE |
     AC_ACCESS_REGISTER_POSTEXEC |
-    AC_AR_SIZE(xlen) | 
+    AC_AR_SIZE(xlen) |
     AC_AR_REGNO(S0);
 
   RUN_AC_OR_DIE(command, prog, 3, data, xlen/(4*8));
@@ -240,7 +241,7 @@ void dtm_t::read_chunk(uint64_t taddr, size_t len, void* dst)
     if ((i + 1) < (len * 8 / xlen)) {
       command |= AC_ACCESS_REGISTER_POSTEXEC;
     }
-    
+
     RUN_AC_OR_DIE(command, 0, 0, data, xlen/(4*8));
 
     memcpy(curr, data, xlen/8);
@@ -250,12 +251,12 @@ void dtm_t::read_chunk(uint64_t taddr, size_t len, void* dst)
   restore_reg(S0, s0);
   restore_reg(S1, s1);
 
-  resume(current_hart); 
+  resume(current_hart);
 
 }
 
 void dtm_t::write_chunk(uint64_t taddr, size_t len, const void* src)
-{  
+{
   uint32_t prog[ram_words];
   uint32_t data[data_words];
 
@@ -265,23 +266,23 @@ void dtm_t::write_chunk(uint64_t taddr, size_t len, const void* src)
 
   uint64_t s0 = save_reg(S0);
   uint64_t s1 = save_reg(S1);
-  
+
   prog[0] = STORE(xlen, S1, S0, 0);
   prog[1] = ADDI(S0, S0, xlen/8);
   prog[2] = EBREAK;
-  
+
   data[0] = (uint32_t) taddr;
   if (xlen > 32) {
     data[1] = (uint32_t) (taddr >> 32);
   }
 
   // Write the program (not used yet).
-  // Write s0 with the address. 
+  // Write s0 with the address.
   uint32_t command = AC_ACCESS_REGISTER_TRANSFER |
     AC_ACCESS_REGISTER_WRITE |
     AC_AR_SIZE(xlen) |
     AC_AR_REGNO(S0);
-  
+
   RUN_AC_OR_DIE(command, prog, 3, data, xlen/(4*8));
 
   // Use Autoexec for more than one word of transfer.
@@ -290,10 +291,10 @@ void dtm_t::write_chunk(uint64_t taddr, size_t len, const void* src)
   // Each time we write XLEN bits.
   memcpy(data, curr, xlen/8);
   curr += xlen/8;
-  
+
   command = AC_ACCESS_REGISTER_TRANSFER |
     AC_ACCESS_REGISTER_POSTEXEC |
-    AC_ACCESS_REGISTER_WRITE | 
+    AC_ACCESS_REGISTER_WRITE |
     AC_AR_SIZE(xlen) |
     AC_AR_REGNO(S1);
 
@@ -310,7 +311,7 @@ void dtm_t::write_chunk(uint64_t taddr, size_t len, const void* src)
       write(DMI_DATA0 + 1, data[1]);
     }
     write(DMI_DATA0, data[0]); //Triggers a command w/ autoexec.
-    
+
     do {
       abstractcs = read(DMI_ABSTRACTCS);
     } while (abstractcs & DMI_ABSTRACTCS_BUSY);
@@ -321,7 +322,7 @@ void dtm_t::write_chunk(uint64_t taddr, size_t len, const void* src)
   if ((len * 8 / xlen) > 1) {
     write(DMI_ABSTRACTAUTO, 0);
   }
-  
+
   restore_reg(S0, s0);
   restore_reg(S1, s1);
   resume(current_hart);
@@ -353,7 +354,7 @@ void dtm_t::clear_chunk(uint64_t taddr, size_t len)
 {
   uint32_t prog[ram_words];
   uint32_t data[data_words];
-  
+
   halt(current_hart);
   uint64_t s0 = save_reg(S0);
   uint64_t s1 = save_reg(S1);
@@ -431,24 +432,24 @@ uint64_t dtm_t::modify_csr(unsigned which, uint64_t data, uint32_t type)
   // ignore transfer bit, so use "store to X0" NOOP.
   // We sort of need this anyway because run_abstract_command
   // needs the DATA to be written so may as well use the WRITE flag.
-  
+
   uint32_t adata[] = {(uint32_t) data,
                       (uint32_t) (data >> 32)};
-  
+
   uint32_t command = AC_ACCESS_REGISTER_POSTEXEC |
     AC_ACCESS_REGISTER_TRANSFER |
     AC_ACCESS_REGISTER_WRITE |
     AC_AR_SIZE(xlen) |
     AC_AR_REGNO(X0);
-  
+
   RUN_AC_OR_DIE(command, prog, sizeof(prog) / sizeof(*prog), adata, xlen/(4*8));
-  
+
   uint64_t res = read(DMI_DATA0);//adata[0];
   if (xlen == 64)
     res |= read(DMI_DATA0 + 1);//((uint64_t) adata[1]) << 32;
-  
+
   resume(current_hart);
-  return res;  
+  return res;
 }
 
 size_t dtm_t::chunk_max_size()
@@ -465,7 +466,7 @@ uint32_t dtm_t::get_xlen()
   // the size of S0 so you can save it later, then do that.
   uint32_t command = AC_ACCESS_REGISTER_TRANSFER | AC_AR_REGNO(S0);
   uint32_t cmderr;
-  
+
   const uint32_t prog[] = {};
   uint32_t data[] = {};
 
@@ -487,7 +488,7 @@ uint32_t dtm_t::get_xlen()
   if (cmderr == 0){
     return 32;
   }
-  
+
   throw std::runtime_error("FESVR DTM can't determine XLEN. Aborting");
 }
 
@@ -508,7 +509,7 @@ void dtm_t::fence_i()
     AC_AR_REGNO(X0);
 
   RUN_AC_OR_DIE(command, prog, sizeof(prog)/sizeof(*prog), 0, 0);
-  
+
   resume(current_hart);
 
 }
@@ -531,7 +532,7 @@ void dtm_t::reset()
   // this will enforce that hart 0 handles them.
   select_hart(0);
   read(DMI_DMSTATUS);
-} 
+}
 
 void dtm_t::idle()
 {
@@ -560,14 +561,14 @@ void dtm_t::producer_thread()
 
   // Enable the debugger.
   write(DMI_DMCONTROL, DMI_DMCONTROL_DMACTIVE);
-  
+
   num_harts = enumerate_harts();
   halt(0);
   // Note: We don't support systems with heterogeneous XLEN.
   // It's possible to do this at the cost of extra cycles.
   xlen = get_xlen();
   resume(0);
-  
+
   htif_t::run();
 
   while (true)

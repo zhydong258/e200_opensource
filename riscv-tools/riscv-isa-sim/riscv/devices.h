@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <stdexcept> //add by zyuan
 
 class processor_t;
 

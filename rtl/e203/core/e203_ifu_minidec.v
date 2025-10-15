@@ -1,26 +1,26 @@
- /*                                                                      
- Copyright 2018 Nuclei System Technology, Inc.                
-                                                                         
- Licensed under the Apache License, Version 2.0 (the "License");         
- you may not use this file except in compliance with the License.        
- You may obtain a copy of the License at                                 
-                                                                         
-     http://www.apache.org/licenses/LICENSE-2.0                          
-                                                                         
-  Unless required by applicable law or agreed to in writing, software    
- distributed under the License is distributed on an "AS IS" BASIS,       
+ /*
+ Copyright 2018 Nuclei System Technology, Inc.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and     
- limitations under the License.                                          
- */                                                                      
-                                                                         
-                                                                         
-                                                                         
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
+
+
 //=====================================================================
 // Designer   : Bob Hu
 //
 // Description:
-//  The mini-decode module to decode the instruction in IFU 
+//  The mini-decode module to decode the instruction in IFU
 //
 // ====================================================================
 `include "e203_defines.v"
@@ -30,10 +30,11 @@ module e203_ifu_minidec(
   //////////////////////////////////////////////////////////////
   // The IR stage to Decoder
   input  [`E203_INSTR_SIZE-1:0] instr,
-  
+
   //////////////////////////////////////////////////////////////
   // The Decoded Info-Bus
 
+  // ANSI C风格的端口声明，即在端口列表中给出端口的完整信息
 
   output dec_rs1en,
   output dec_rs2en,
@@ -53,16 +54,17 @@ module e203_ifu_minidec(
   output dec_jalr,
   output dec_bxx,
   output [`E203_RFIDX_WIDTH-1:0] dec_jalr_rs1idx,
-  output [`E203_XLEN-1:0] dec_bjp_imm 
+  output [`E203_XLEN-1:0] dec_bjp_imm
 
   );
 
+  // 实例化exu单元中的decode，把不用的输入置0，不用的输出悬空
   e203_exu_decode u_e203_exu_decode(
 
   .i_instr(instr),
   .i_pc(`E203_PC_SIZE'b0),
-  .i_prdt_taken(1'b0), 
-  .i_muldiv_b2b(1'b0), 
+  .i_prdt_taken(1'b0),
+  .i_muldiv_b2b(1'b0),
 
   .i_misalgn (1'b0),
   .i_buserr  (1'b0),
@@ -81,11 +83,11 @@ module e203_ifu_minidec(
   .dec_rs1idx(dec_rs1idx),
   .dec_rs2idx(dec_rs2idx),
   .dec_rdidx(),
-  .dec_info(),  
+  .dec_info(),
   .dec_imm(),
   .dec_pc(),
 
-  
+
   .dec_mulhsu(dec_mulhsu),
   .dec_mul   (dec_mul   ),
   .dec_div   (dec_div   ),
@@ -100,7 +102,7 @@ module e203_ifu_minidec(
   .dec_bxx (dec_bxx ),
 
   .dec_jalr_rs1idx(dec_jalr_rs1idx),
-  .dec_bjp_imm    (dec_bjp_imm    )  
+  .dec_bjp_imm    (dec_bjp_imm    )
   );
 
 

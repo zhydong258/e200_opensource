@@ -6,6 +6,7 @@
 #include <cstring>
 #include <string>
 #include <functional>
+#include <cstdint> // add by zyuan
 
 class htif_t;
 
