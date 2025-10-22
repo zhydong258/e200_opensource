@@ -1,21 +1,21 @@
- /*                                                                      
- Copyright 2018 Nuclei System Technology, Inc.                
-                                                                         
- Licensed under the Apache License, Version 2.0 (the "License");         
- you may not use this file except in compliance with the License.        
- You may obtain a copy of the License at                                 
-                                                                         
-     http://www.apache.org/licenses/LICENSE-2.0                          
-                                                                         
-  Unless required by applicable law or agreed to in writing, software    
- distributed under the License is distributed on an "AS IS" BASIS,       
+ /*
+ Copyright 2018 Nuclei System Technology, Inc.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and     
- limitations under the License.                                          
- */                                                                      
-                                                                         
-                                                                         
-                                                                         
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
+
+
 //=====================================================================
 // Designer   : Bob Hu
 //
@@ -30,7 +30,7 @@ module e203_ifu_litebpu(
   // Current PC
   input  [`E203_PC_SIZE-1:0] pc,
 
-  // The mini-decoded info 
+  // The mini-decoded info
   input  dec_jal,
   input  dec_jalr,
   input  dec_bxx,
@@ -42,11 +42,11 @@ module e203_ifu_litebpu(
   input  ir_empty,
   input  ir_rs1en,
   input  jalr_rs1idx_cam_irrdidx,
-  
+
   // The add op to next-pc adder
-  output bpu_wait,  
-  output prdt_taken,  
-  output [`E203_PC_SIZE-1:0] prdt_pc_add_op1,  
+  output bpu_wait,
+  output prdt_taken,
+  output [`E203_PC_SIZE-1:0] prdt_pc_add_op1,
   output [`E203_PC_SIZE-1:0] prdt_pc_add_op2,
 
   input  dec_i_valid,
@@ -70,7 +70,7 @@ module e203_ifu_litebpu(
   //   * JALR with rs1 = x1: The x1 register value is directly wired from regfile
   //          when the x1 have no dependency with ongoing instructions by checking
   //          two conditions:
-  //            ** (1) The OTIF in EXU must be empty 
+  //            ** (1) The OTIF in EXU must be empty
   //            ** (2) The instruction in IR have no x1 as destination register
   //          * If there is dependency, then hold up IFU until the dependency is cleared
   //   * JALR with rs1 != x0 or x1: The target address of JALR need to be resolved
@@ -81,8 +81,8 @@ module e203_ifu_litebpu(
   //          jump, and not-taken if it is forward jump. The target address of JAL
   //          is calculated based on current PC value and offset
 
-  // The JAL and JALR is always jump, bxxx backward is predicted as taken  
-  assign prdt_taken   = (dec_jal | dec_jalr | (dec_bxx & dec_bjp_imm[`E203_XLEN-1]));  
+  // The JAL and JALR is always jump, bxxx backward is predicted as taken
+  assign prdt_taken   = (dec_jal | dec_jalr | (dec_bxx & dec_bjp_imm[`E203_XLEN-1]));
   // The JALR with rs1 == x1 have dependency or xN have dependency
   wire dec_jalr_rs1x0 = (dec_jalr_rs1idx == `E203_RFIDX_WIDTH'd0);
   wire dec_jalr_rs1x1 = (dec_jalr_rs1idx == `E203_RFIDX_WIDTH'd1);
@@ -110,8 +110,8 @@ module e203_ifu_litebpu(
   assign prdt_pc_add_op1 = (dec_bxx | dec_jal) ? pc[`E203_PC_SIZE-1:0]
                          : (dec_jalr & dec_jalr_rs1x0) ? `E203_PC_SIZE'b0
                          : (dec_jalr & dec_jalr_rs1x1) ? rf2bpu_x1[`E203_PC_SIZE-1:0]
-                         : rf2bpu_rs1[`E203_PC_SIZE-1:0];  
+                         : rf2bpu_rs1[`E203_PC_SIZE-1:0];
 
-  assign prdt_pc_add_op2 = dec_bjp_imm[`E203_PC_SIZE-1:0];  
+  assign prdt_pc_add_op2 = dec_bjp_imm[`E203_PC_SIZE-1:0];
 
 endmodule

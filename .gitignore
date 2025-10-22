@@ -14,3 +14,6 @@ restore.real
 vsim/e205fd_irq.rc
 vsim/irq.rc
 netlist/
+*.vcd
+*.view
+icarus/
