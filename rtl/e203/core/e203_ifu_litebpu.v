@@ -31,6 +31,7 @@ module e203_ifu_litebpu(
   input  [`E203_PC_SIZE-1:0] pc,
 
   // The mini-decoded info
+  // dec 代表 decode 的意思
   input  dec_jal,
   input  dec_jalr,
   input  dec_bxx,
