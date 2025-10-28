@@ -21,7 +21,7 @@
 //
 // Description:
 //  The Lite-BPU module to handle very simple branch predication at IFU
-//
+//  简单分支预测 Lite Branch Predicition Unit
 // ====================================================================
 `include "e203_defines.v"
 
@@ -35,8 +35,8 @@ module e203_ifu_litebpu(
   input  dec_jal,
   input  dec_jalr,
   input  dec_bxx,
-  input  [`E203_XLEN-1:0] dec_bjp_imm,
-  input  [`E203_RFIDX_WIDTH-1:0] dec_jalr_rs1idx,
+  input  [`E203_XLEN-1:0] dec_bjp_imm, // 跳转的立即数imm，并不是32位的，是位扩展为32位了，见 e203_exu_decode.v
+  input  [`E203_RFIDX_WIDTH-1:0] dec_jalr_rs1idx, // 这里是5位宽的总线，可以对应32个 register file，但是我不知道具体是怎么选择哪个regfile的
 
   // The IR index and OITF status to be used for checking dependency
   input  oitf_empty,
@@ -53,6 +53,7 @@ module e203_ifu_litebpu(
   input  dec_i_valid,
 
   // The RS1 to read regfile
+  // 下面的rf，应该是regfile的缩写
   output bpu2rf_rs1_ena,
   input  ir_valid_clr,
   input  [`E203_XLEN-1:0] rf2bpu_x1,
@@ -83,10 +84,10 @@ module e203_ifu_litebpu(
   //          is calculated based on current PC value and offset
 
   // The JAL and JALR is always jump, bxxx backward is predicted as taken
-  assign prdt_taken   = (dec_jal | dec_jalr | (dec_bxx & dec_bjp_imm[`E203_XLEN-1]));
+  assign prdt_taken   = (dec_jal | dec_jalr | (dec_bxx & dec_bjp_imm[`E203_XLEN-1])); // imm 立即数的最高位为1,是负数，就是往后跳转，
   // The JALR with rs1 == x1 have dependency or xN have dependency
   wire dec_jalr_rs1x0 = (dec_jalr_rs1idx == `E203_RFIDX_WIDTH'd0);
-  wire dec_jalr_rs1x1 = (dec_jalr_rs1idx == `E203_RFIDX_WIDTH'd1);
+  wire dec_jalr_rs1x1 = (dec_jalr_rs1idx == `E203_RFIDX_WIDTH'd1); // 5'd1,d代表10进制，这里就是1,
   wire dec_jalr_rs1xn = (~dec_jalr_rs1x0) & (~dec_jalr_rs1x1);
 
   wire jalr_rs1x1_dep = dec_i_valid & dec_jalr & dec_jalr_rs1x1 & ((~oitf_empty) | (jalr_rs1idx_cam_irrdidx));

@@ -29,31 +29,33 @@ module e203_ifu_minidec(
 
   //////////////////////////////////////////////////////////////
   // The IR stage to Decoder
-  input  [`E203_INSTR_SIZE-1:0] instr,
+  input  [`E203_INSTR_SIZE-1:0] instr, // 取回的指令输入进行部分译码
 
   //////////////////////////////////////////////////////////////
   // The Decoded Info-Bus
 
   // ANSI C风格的端口声明，即在端口列表中给出端口的完整信息
 
-  output dec_rs1en,
-  output dec_rs2en,
-  output [`E203_RFIDX_WIDTH-1:0] dec_rs1idx,
-  output [`E203_RFIDX_WIDTH-1:0] dec_rs2idx,
+  // riscv中的指令比较工整，需要读取的寄存器最多为两个，rs1和rs2,写入的只有一个rd
+  // rs1和rs2可以通过索引指定到不同的通用寄存器，通用寄存器32个，所以索引位数为5
+  output dec_rs1en, // 指令需要读rs1
+  output dec_rs2en, // 指令需要读rs1
+  output [`E203_RFIDX_WIDTH-1:0] dec_rs1idx, // 指令需要读rs1, 这个rs1的索引是多少
+  output [`E203_RFIDX_WIDTH-1:0] dec_rs2idx, // 指令需要读rs2, 这个rs2的索引是多少
 
-  output dec_mulhsu,
+  output dec_mulhsu, // 属于哪种指令类型
   output dec_mul   ,
   output dec_div   ,
   output dec_rem   ,
   output dec_divu  ,
   output dec_remu  ,
 
-  output dec_rv32,
-  output dec_bjp,
+  output dec_rv32, // 当前指令是16还是32位
+  output dec_bjp, // 指令是普通指令还是分支跳转指令，即 assign dec_bjp = dec_jal | dec_jalr | dec_bxx;
   output dec_jal,
   output dec_jalr,
   output dec_bxx,
-  output [`E203_RFIDX_WIDTH-1:0] dec_jalr_rs1idx,
+  output [`E203_RFIDX_WIDTH-1:0] dec_jalr_rs1idx, // 该指令是jalr指令，其使用的rs1索引是多少
   output [`E203_XLEN-1:0] dec_bjp_imm
 
   );

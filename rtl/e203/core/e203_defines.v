@@ -61,7 +61,7 @@
    `define E203_SUPPORT_MCYCLE_MINSTRET
 `endif
 
-
+// 通用寄存器的宽度由XLEN这个术语表示
 `define E203_CFG_XLEN_IS_32
 `ifdef E203_CFG_XLEN_IS_32//{
   `define E203_XLEN_IS_32
@@ -71,7 +71,7 @@
 `define E203_INSTR_SIZE    32  // instruction size 指令长度
 
 //
-`define E203_RFIDX_WIDTH   5
+`define E203_RFIDX_WIDTH   5 // RFIDX Register File Index 寄存器索引 5位32个
 `ifdef E203_CFG_REGNUM_IS_32//{
   `define E203_RFREG_NUM_IS_32
   `define E203_RFREG_NUM     32
